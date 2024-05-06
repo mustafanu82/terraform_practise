@@ -1,0 +1,102 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: TerraformTaskV4@4
+  displayName: Terraform Init
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    backendServiceArm: 'Azure Pass - Sponsorship(aeff875f-ab17-4c1e-8929-f5af071b97e8)'
+    backendAzureRmResourceGroupName: 'myrg'
+    backendAzureRmStorageAccountName: 'remotestoragestateacc201'
+    backendAzureRmContainerName: 'tfstatefile'
+    backendAzureRmKey: 'iac-dev.tfstate'
+- task: TerraformTaskV4@4
+  displayName: Terraform Validate
+  inputs:
+    provider: 'azurerm'
+    command: 'validate'
+- task: TerraformTaskV4@4
+  displayName: Terraform Format check
+  inputs:
+    provider: 'azurerm'
+    command: 'custom'
+    customCommand: 'fmt'
+    outputTo: 'console'
+    environmentServiceNameAzureRM: 'Azure Pass - Sponsorship(aeff875f-ab17-4c1e-8929-f5af071b97e8)'
+    
+- task: TerraformTaskV4@4
+  displayName: Terraform Plan
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    commandOptions: '-out $(Build.SourcesDirectory)/tfplanfile'
+    environmentServiceNameAzureRM: 'Azure Pass - Sponsorship(aeff875f-ab17-4c1e-8929-f5af071b97e8)'
+
+- task: ArchiveFiles@2
+  displayName: Archive the files to Source directory
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+    
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: '$(Build.BuildId)-build'
+    publishLocation: 'Container'
+
+================================================================================
+
+steps to take care during release pipeline.. 
+
+task1: Extract Files
+under archive file patterns put this  _$(Build.DefinitionName)/$(Build.Buildid)-build/$(Build.Buildid).zip
+
+Destination folder: '$(System.DefaultWorkingDirectory)/'
+
+Task2: would terraform intall
+
+Task3 : would be to run init..  give all backend related ifnromation
+ and under configuration directory: $(System.DefaultWorkingDirectory)
+
+Task4 : Apply
+
+under configuration directory: '$(System.DefaultWorkingDirectory)/'
+additional comments: -var-file=dev.tfvars --auto-approve
+
+
+
+BCC --
+
+Assessment .. inventory and operation technologies... all tracks ... onpremise and cloud ..
+
+auto provisioning .. why ? .........
+
+tools gather karne he... 
+
+Santosh .....pre-sales ....
+
+Manoj manchanda ...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
